@@ -6,6 +6,10 @@
 
 ECS is AWS's original offering for Docker Orchestration. Although less feature rich than Kubernetes (EKS), it has proved to be an extremely stable platform for hosting stateless Docker services. This Terraform module is meant to be a one-size-fits-all ECS Service module. A module which makes it easy for any developer to create an ECS Service, have it attached to a load balancer, automatically grant it the necessary IAM permissions, and add extra scaling properties. By design it's not meant to update the ECS Services through Terraform once they have been created; rather, this is better handled by other open source projects like https://github.com/silinternational/ecs-deploy 
 
+## Important notes
+
+The role name belonging to the ECS Service has the following layout {clustername}-{servicename}-task-role , the combined length of the role name can be 64 Chars. Make sure that the combined length of your ECS cluster and service name is only 53 Chars.
+
 ### Application Load Balancer (ALB) attachment
 
 ![](https://raw.githubusercontent.com/blinkist/airship-tf-ecs-service/master/_readme_resources/alb_public.png)
@@ -99,7 +103,11 @@ The Role ARN of the ECS Service is exported, and can be used to add other permis
 
 module "demo_web" {
   source  = "blinkist/airship-ecs-service/aws"
-  version = "0.6.1"
+  version = "0.7.1"
+
+  # The role name belonging to the ECS Service has the following layout {clustername}-{servicename}-task-role
+  # Make sure that the combined length of your ECS cluster name and service name is only 53 Chars, with more that 53 chars
+  # the length will surpass the maximum length of 64.
 
   name   = "demo-web"
 
