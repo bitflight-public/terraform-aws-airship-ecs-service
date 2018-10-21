@@ -49,6 +49,7 @@ variable "container_cpu" {
 variable "privileged" {
   description = "Bool. Run the container with elevated privilege."
   default     = "false"
+  type        = "string"
 }
 
 variable "essential" {

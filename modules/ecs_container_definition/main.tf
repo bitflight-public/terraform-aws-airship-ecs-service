@@ -29,7 +29,7 @@ locals {
     command                = "${var.command}"
     workingDirectory       = "${var.working_directory}"
     readonlyRootFilesystem = "${var.readonly_root_filesystem}"
-    privileged             = "${local.safe_search_replace_string}${var.privileged}"
+    privileged             = "${var.privileged}"
 
     hostname = "${var.hostname}"
 
