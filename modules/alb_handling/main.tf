@@ -10,8 +10,9 @@ locals {
   # Validate the record type by looking up the map with valid record types
   route53_record_type = "${lookup(var.allowed_record_types,var.route53_record_type)}"
 
-  # We limit the target group name to a length of 32
-  tg_name = "${format("%.32s",format("%v-%v", var.cluster_name, var.name))}"
+  ## We limit the target group name to a length of 32
+  ## And also remove any trailing or starting hyphens that may get left after the trim
+  tg_name = "${replace(format("%.32s",format("%v-%v", var.cluster_name, var.name)), "/^-+(.+?)-+$/", "$1")}"
 }
 
 ## Route53 DNS Record
@@ -67,15 +68,15 @@ resource "aws_lb_target_group" "service_nlb" {
 
   tags = "${local.tags}"
 
-  depends_on = [
-    "aws_lb_listener.nlb_listener",
-    "aws_lb_listener_rule.host_based_routing",
-    "aws_lb_listener_rule.host_based_routing_redirect_to_https",
-    "aws_lb_listener_rule.host_based_routing_ssl",
-    "aws_lb_listener_rule.host_based_routing_ssl_cognito_auth",
-    "aws_lb_listener_rule.host_based_routing_custom_listen_host",
-    "aws_lb_listener_rule.forward_all",
-  ]
+  # depends_on = [
+  #   "aws_lb_listener.nlb_listener",
+  #   "aws_lb_listener_rule.host_based_routing",
+  #   "aws_lb_listener_rule.host_based_routing_redirect_to_https",
+  #   "aws_lb_listener_rule.host_based_routing_ssl",
+  #   "aws_lb_listener_rule.host_based_routing_ssl_cognito_auth",
+  #   "aws_lb_listener_rule.host_based_routing_custom_listen_host",
+  #   "aws_lb_listener_rule.forward_all",
+  # ]
 }
 
 resource "aws_lb_listener" "nlb_listener" {
@@ -110,7 +111,6 @@ resource "aws_lb_target_group" "service" {
   }
 
   depends_on = [
-    "aws_lb_listener.nlb_listener",
     "aws_lb_listener_rule.host_based_routing",
     "aws_lb_listener_rule.host_based_routing_redirect_to_https",
     "aws_lb_listener_rule.host_based_routing_ssl",
