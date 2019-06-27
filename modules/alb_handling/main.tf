@@ -66,6 +66,16 @@ resource "aws_lb_target_group" "service_nlb" {
   }
 
   tags = "${local.tags}"
+
+  depends_on = [
+    "aws_lb_listener.nlb_listener",
+    "aws_lb_listener_rule.host_based_routing",
+    "aws_lb_listener_rule.host_based_routing_redirect_to_https",
+    "aws_lb_listener_rule.host_based_routing_ssl",
+    "aws_lb_listener_rule.host_based_routing_ssl_cognito_auth",
+    "aws_lb_listener_rule.host_based_routing_custom_listen_host",
+    "aws_lb_listener_rule.forward_all",
+  ]
 }
 
 resource "aws_lb_listener" "nlb_listener" {
@@ -97,6 +107,34 @@ resource "aws_lb_target_group" "service" {
     path                = "${var.health_uri}"
     unhealthy_threshold = "${var.unhealthy_threshold}"
     healthy_threshold   = "${var.healthy_threshold}"
+  }
+
+  depends_on = [
+    "aws_lb_listener.nlb_listener",
+    "aws_lb_listener_rule.host_based_routing",
+    "aws_lb_listener_rule.host_based_routing_redirect_to_https",
+    "aws_lb_listener_rule.host_based_routing_ssl",
+    "aws_lb_listener_rule.host_based_routing_ssl_cognito_auth",
+    "aws_lb_listener_rule.host_based_routing_custom_listen_host",
+    "aws_lb_listener_rule.forward_all",
+  ]
+}
+
+##
+## An aws_lb_listener_rule will only be created when a service has a load balancer attached
+resource "aws_lb_listener_rule" "forward_all" {
+  count = "${var.create && var.load_balancing_type == "application" && ! var.redirect_http_to_https && local.route53_record_type == "NONE" ? 1 : 0 }"
+
+  listener_arn = "${var.lb_listener_arn}"
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.service.arn}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["*"]
   }
 }
 
